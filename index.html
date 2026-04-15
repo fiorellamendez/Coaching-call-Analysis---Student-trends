@@ -383,9 +383,14 @@ new Chart(document.getElementById('appChart'), {
     labels: ['MobyMax','IXL','Zearn','Math Academy','AlphaWrite','AlphaRead','Freckle','Lalilo','ClearFluency','AlphaMath Flu.','Edia','Amplify'],
     datasets: [{ data: [698,658,372,284,246,203,119,111,101,90,83,53], backgroundColor: BAR_PURPLE, borderRadius: 4, borderWidth: 0 }]
   },
-  options: { ...baseOpts(true),
+  options: {
+    responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} calls (${(ctx.parsed.x/total*100).toFixed(1)}%)` } } },
+      tooltip: { callbacks: {
+        title: ctx => ctx[0].label,
+        label: ctx => ` ${ctx.parsed.x.toLocaleString()} calls (${(ctx.parsed.x/total*100).toFixed(1)}%)`
+      } }
+    },
     scales: {
       x: { ticks: { color: textCol, font: { size: 10 } }, grid: { color: gridCol }, border: { display: false } },
       y: { ticks: { color: textCol, font: { size: 10, family: 'DM Sans' } }, grid: { display: false }, border: { display: false } }
