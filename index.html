@@ -287,9 +287,6 @@
       </span>
     </div>
 
-    <div class="chart-card" style="margin-bottom:28px;">
-      <div id="rateViz"></div>
-    </div>
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div class="chart-title" style="margin-bottom:0;">Independence progress table</div>
@@ -378,7 +375,6 @@ new Chart(document.getElementById('lvlChart'), {
 // App
 new Chart(document.getElementById('appChart'), {
   type: 'bar',
-  indexAxis: 'y',
   data: {
     labels: ['MobyMax','IXL','Zearn','Math Academy','AlphaWrite','AlphaRead','Freckle','Lalilo','ClearFluency','AlphaMath Flu.','Edia','Amplify'],
     datasets: [{ data: [698,658,372,284,246,203,119,111,101,90,83,53], backgroundColor: BAR_PURPLE, borderRadius: 4, borderWidth: 0 }]
@@ -388,12 +384,12 @@ new Chart(document.getElementById('appChart'), {
     plugins: { legend: { display: false },
       tooltip: { callbacks: {
         title: ctx => ctx[0].label,
-        label: ctx => ` ${ctx.parsed.x.toLocaleString()} calls (${(ctx.parsed.x/total*100).toFixed(1)}%)`
+        label: ctx => ` ${ctx.parsed.y.toLocaleString()} calls (${(ctx.parsed.y/total*100).toFixed(1)}%)`
       } }
     },
     scales: {
-      x: { ticks: { color: textCol, font: { size: 10 } }, grid: { color: gridCol }, border: { display: false } },
-      y: { ticks: { color: textCol, font: { size: 10, family: 'DM Sans' } }, grid: { display: false }, border: { display: false } }
+      x: { ticks: { color: textCol, font: { size: 10, family: 'DM Sans' }, autoSkip: false, maxRotation: 38 }, grid: { display: false }, border: { display: false } },
+      y: { ticks: { color: textCol, font: { size: 11 } }, grid: { color: gridCol }, border: { display: false } }
     }
   }
 });
