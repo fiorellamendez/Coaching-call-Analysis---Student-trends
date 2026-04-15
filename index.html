@@ -451,7 +451,7 @@ function sinceColor(s) {
   return '#888780';
 }
 
-// Rate visual — DOM based, no Chart.js confusion
+// Rate visual — DOM based
 const rateViz = document.getElementById('rateViz');
 const maxRate = Math.max(...students.map(s => Math.max(s.before, s.since)));
 
@@ -475,7 +475,7 @@ rateViz.innerHTML = `
             <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
               <div style="width:${beforePct}%;height:8px;border-radius:3px;background:#6B5EE4;"></div>
             </div>
-            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:#6B5EE4;min-width:32px;text-align:right;">${s.before.toFixed(2)}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:#6B5EE4;min-width:36px;text-align:right;">${s.before.toFixed(2)}</span>
           </div>
         </div>
         <div style="padding:10px 12px;background:${bg};border-top:1px solid var(--border);">
@@ -483,16 +483,14 @@ rateViz.innerHTML = `
             <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
               <div style="width:${sincePct}%;height:8px;border-radius:3px;background:${col};"></div>
             </div>
-            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${col};min-width:32px;text-align:right;">${s.since.toFixed(2)}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${col};min-width:36px;text-align:right;">${s.since.toFixed(2)}</span>
           </div>
         </div>`;
     }).join('')}
   </div>`;
 
-
 // Table
 const tbody = document.getElementById('indepTable');
-const maxRate = 5.63;
 students.forEach((s, i) => {
   const col = sinceColor(s);
   let chgText;
