@@ -468,12 +468,16 @@ new Chart(document.getElementById('rateChart'), {
   options: {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)} calls/week` } }
+      tooltip: { callbacks: {
+        title: ctx => ctx[0].label,
+        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)} calls/week`
+      } }
     },
     scales: {
       x: { ticks: { color: textCol, font: { size: 11 }, callback: v => v.toFixed(1) }, grid: { color: gridCol }, border: { display: false },
         title: { display: true, text: 'calls per week', color: textCol, font: { size: 11 } } },
-      y: { ticks: { color: textCol, font: { size: 12, family: 'DM Sans' } }, grid: { display: false }, border: { display: false } }
+      y: { ticks: { color: textCol, font: { size: 12, family: 'DM Sans' } }, grid: { display: false }, border: { display: false },
+        title: { display: true, text: 'student', color: textCol, font: { size: 11 } } }
     }
   }
 });
