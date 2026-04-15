@@ -288,11 +288,8 @@
     </div>
 
     <div class="chart-card" style="margin-bottom:28px;">
-      <div class="chart-wrap" style="height:860px;">
-        <canvas id="rateChart" role="img" aria-label="Calls per week before and since March 1 for top 20 students.">Calls per week comparison for top 20 students.</canvas>
-      </div>
+      <div id="rateViz"></div>
     </div>
-
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div class="chart-title" style="margin-bottom:0;">Independence progress table</div>
@@ -454,33 +451,44 @@ function sinceColor(s) {
   return '#888780';
 }
 
-// Rate chart
-new Chart(document.getElementById('rateChart'), {
-  type: 'bar',
-  indexAxis: 'y',
-  data: {
-    labels: students.map(s => s.name),
-    datasets: [
-      { label: 'Before Mar 1', data: students.map(s => s.before), backgroundColor: BAR_PURPLE, borderRadius: 2, borderWidth: 0 },
-      { label: 'Since Mar 1',  data: students.map(s => s.since),  backgroundColor: students.map(s => sinceColor(s)), borderRadius: 2, borderWidth: 0 }
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false },
-      tooltip: { callbacks: {
-        title: ctx => ctx[0].label,
-        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)} calls/week`
-      } }
-    },
-    scales: {
-      x: { ticks: { color: textCol, font: { size: 11 }, callback: v => v.toFixed(1) }, grid: { color: gridCol }, border: { display: false },
-        title: { display: true, text: 'calls per week', color: textCol, font: { size: 11 } } },
-      y: { ticks: { color: textCol, font: { size: 12, family: 'DM Sans' } }, grid: { display: false }, border: { display: false },
-        title: { display: true, text: 'student', color: textCol, font: { size: 11 } } }
-    }
-  }
-});
+// Rate visual — DOM based, no Chart.js confusion
+const rateViz = document.getElementById('rateViz');
+const maxRate = Math.max(...students.map(s => Math.max(s.before, s.since)));
+
+rateViz.innerHTML = `
+  <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:0;font-size:12px;">
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px 8px 0;">Student</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;">Before Mar 1 (calls/week)</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;">Since Mar 1 (calls/week)</div>
+    ${students.map((s, i) => {
+      const col = sinceColor(s);
+      const beforePct = (s.before / maxRate * 100).toFixed(1);
+      const sincePct  = (s.since  / maxRate * 100).toFixed(1);
+      const bg = i % 2 === 0 ? 'transparent' : 'var(--surface2)';
+      let flagHtml = '';
+      if (s.flag === 'attention') flagHtml = `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:#FDF0DC;color:#8A5500;margin-left:6px;">▲</span>`;
+      else if (s.flag === 'positive') flagHtml = `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:#E0F5ED;color:#0E6B50;margin-left:6px;">▼</span>`;
+      return `
+        <div style="padding:10px 12px 10px 0;background:${bg};display:flex;align-items:center;font-weight:500;border-top:1px solid var(--border);">${s.name}${flagHtml}</div>
+        <div style="padding:10px 12px;background:${bg};border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
+              <div style="width:${beforePct}%;height:8px;border-radius:3px;background:#6B5EE4;"></div>
+            </div>
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:#6B5EE4;min-width:32px;text-align:right;">${s.before.toFixed(2)}</span>
+          </div>
+        </div>
+        <div style="padding:10px 12px;background:${bg};border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
+              <div style="width:${sincePct}%;height:8px;border-radius:3px;background:${col};"></div>
+            </div>
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${col};min-width:32px;text-align:right;">${s.since.toFixed(2)}</span>
+          </div>
+        </div>`;
+    }).join('')}
+  </div>`;
+
 
 // Table
 const tbody = document.getElementById('indepTable');
