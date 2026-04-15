@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academic Coaching - Student Trend Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F4F2EE;
+    --surface: #FFFFFF;
+    --surface2: #EEEBE5;
+    --border: rgba(0,0,0,0.08);
+    --text-primary: #1A1916;
+    --text-secondary: #6B6860;
+    --text-muted: #A09D98;
+    --purple: #6B5EE4;
+    --purple-light: #EAE7FD;
+    --teal: #1A9E78;
+    --teal-light: #E0F5ED;
+    --amber: #C27B1A;
+    --amber-light: #FDF0DC;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --gray-mid: #888780;
+    --gray-light: #E8E5DF;
+    --flag-drop: #1A9E78;
+    --flag-rise: #C27B1A;
+    --flag-stopped: #A09D98;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--purple); display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 18px; height: 18px; }
+  .header-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .header-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+  .header-badge {
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    background: var(--surface2); color: var(--text-secondary);
+    padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+  }
+
+  /* NAV */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 36px;
+    display: flex; gap: 4px;
+  }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-secondary);
+    background: none; border: none; cursor: pointer;
+    padding: 12px 16px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+  .nav-btn:hover:not(.active) { color: var(--text-primary); }
+
+  /* MAIN */
+  .main { padding: 28px 36px; max-width: 1400px; margin: 0 auto; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  /* KPI TILES */
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 28px; }
+  .tile {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 18px 20px;
+  }
+  .tile-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .tile-value { font-size: 28px; font-weight: 600; line-height: 1; }
+  .tile-value.purple { color: var(--purple); }
+  .tile-value.teal   { color: var(--teal); }
+  .tile-value.amber  { color: var(--amber); }
+  .tile-value.red    { color: var(--red); }
+  .tile-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+  /* CHART CARDS */
+  .chart-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin-bottom: 28px; }
+  .chart-grid-2 { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); gap: 16px; margin-bottom: 28px; }
+  .chart-card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 20px;
+  }
+  .chart-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 16px; }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* DIVIDER */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0 28px; }
+
+  /* INDEPENDENCE TABLE */
+  .indep-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .indep-table th {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); text-align: left; padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .indep-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .indep-table tr:last-child td { border-bottom: none; }
+  .indep-table tr:hover td { background: var(--surface2); }
+  .student-name { font-weight: 500; }
+  .flag-pill {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    margin-left: 6px; vertical-align: middle; font-family: 'DM Mono', monospace;
+  }
+  .flag-attention { background: #FDF0DC; color: #8A5500; }
+  .flag-positive  { background: #E0F5ED; color: #0E6B50; }
+  .rate-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .rate-bar-bg { background: var(--gray-light); border-radius: 2px; height: 5px; }
+  .rate-bar-fill { height: 5px; border-radius: 2px; }
+  .chg-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; }
+
+  /* weekly chart tooltip override — nothing needed */
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="6" stroke="white" stroke-width="1.5"/>
+        <path d="M6 9h6M9 6v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">Academic Coaching — Student Trend Analysis</div>
+      <div class="header-subtitle">2025–26 Academic Year</div>
+    </div>
+  </div>
+  <div class="header-badge">Last updated: Apr 2026</div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('home', this)">Overview</button>
+  <button class="nav-btn" onclick="showPage('students', this)">Top 20 Students</button>
+</nav>
+
+<main class="main">
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+
+    <p class="section-label">Session overview</p>
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">Total sessions</div>
+        <div class="tile-value purple">4,498</div>
+        <div class="tile-sub">all scheduled calls</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Completed sessions</div>
+        <div class="tile-value teal">3,311</div>
+        <div class="tile-sub">student joined</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Missed sessions</div>
+        <div class="tile-value amber">1,186</div>
+        <div class="tile-sub">student did not join</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Miss rate</div>
+        <div class="tile-value red">26.4%</div>
+        <div class="tile-sub">of all scheduled calls</div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+    <p class="section-label">Completed calls breakdown — 3,311 total</p>
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="chart-title">By subject</div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="subjChart" role="img" aria-label="Completed calls by subject">Math 1276, Language 756, Reading 667, Writing 247, Science 208.</canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">By level</div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="lvlChart" role="img" aria-label="Completed calls by level">L1 1286, L2 961, Middle School 507, Lower Level 380, High School 114.</canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">By app — top 12</div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="appChart" role="img" aria-label="Completed calls by app">MobyMax 698, IXL 658, Zearn 372, Math Academy 284.</canvas>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+    <p class="section-label">Activity — before vs since march 1, 2026</p>
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">Calls before Mar 1</div>
+        <div class="tile-value purple">3,122</div>
+        <div class="tile-sub">Sep 2025 – Feb 2026</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Calls since Mar 1</div>
+        <div class="tile-value purple">1,373</div>
+        <div class="tile-sub">Mar – Apr 2026</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Avg / week before</div>
+        <div class="tile-value teal">132</div>
+        <div class="tile-sub">over 23.6 weeks</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Avg / week since Mar 1</div>
+        <div class="tile-value teal">209</div>
+        <div class="tile-sub">over 6.6 weeks · +58%</div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:28px;">
+      <div class="chart-title">Weekly call volume — Sep 2025 to Apr 2026</div>
+      <div style="display:flex;gap:16px;margin-bottom:14px;font-size:12px;color:var(--text-secondary);">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#6B5EE4;display:inline-block;"></span>Before Mar 1</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#1A9E78;display:inline-block;"></span>Since Mar 1</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:2px;border-top:2px dashed #6B5EE4;display:inline-block;margin-top:4px;"></span>Avg before (132)</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:2px;border-top:2px dashed #1A9E78;display:inline-block;margin-top:4px;"></span>Avg since (209)</span>
+      </div>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="weeklyChart" role="img" aria-label="Weekly call volume over time">Weekly calls Sep 2025 to Apr 2026.</canvas>
+      </div>
+    </div>
+
+  </div><!-- /home -->
+
+  <!-- STUDENTS PAGE -->
+  <div class="page" id="page-students">
+
+    <p class="section-label">Independence progress — calls per week before vs since march 1</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;">
+      <span style="font-size:12px;color:var(--text-secondary);font-weight:500;margin-right:4px;">Key:</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
+        <span style="width:10px;height:10px;border-radius:2px;background:#6B5EE4;display:inline-block;"></span>Before Mar 1
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
+        <span style="width:10px;height:10px;border-radius:2px;background:#1A9E78;display:inline-block;"></span>Decrease (more independent)
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
+        <span style="width:10px;height:10px;border-radius:2px;background:#C27B1A;display:inline-block;"></span>Increase (needs more support)
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
+        <span style="width:10px;height:10px;border-radius:2px;background:#B4B2A9;display:inline-block;"></span>No calls since Mar 1
+      </span>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:28px;">
+      <div class="chart-wrap" style="height:860px;">
+        <canvas id="rateChart" role="img" aria-label="Calls per week before and since March 1 for top 20 students.">Calls per week comparison for top 20 students.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="chart-title" style="margin-bottom:0;">Independence progress table</div>
+        <div style="display:flex;gap:8px;">
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#FDF0DC;color:#8A5500;font-weight:600;">▲ Needs attention</span>
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#E0F5ED;color:#0E6B50;font-weight:600;">▼ Strong progress</span>
+        </div>
+      </div>
+      <table class="indep-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th style="text-align:right;">Before/wk</th>
+            <th style="text-align:right;">Since/wk</th>
+            <th style="text-align:right;">Change</th>
+            <th style="width:120px;">Rate trend</th>
+          </tr>
+        </thead>
+        <tbody id="indepTable"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /students -->
+
+</main>
+
+<script>
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const textCol = '#6B6860';
+const gridCol = 'rgba(0,0,0,0.06)';
+const BAR_PURPLE = '#6B5EE4';
+const BAR_TEAL   = '#1A9E78';
+const total = 3311;
+
+const baseOpts = (horizontal) => ({
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: {
+      ticks: { color: textCol, font: { size: 10, family: 'DM Sans' }, autoSkip: false, maxRotation: horizontal ? 0 : 38 },
+      grid: { display: horizontal },
+      border: { display: false }
+    },
+    y: {
+      ticks: { color: textCol, font: { size: 11, family: 'DM Sans' } },
+      grid: { color: horizontal ? 'transparent' : gridCol },
+      border: { display: false }
+    }
+  }
+});
+
+// Subject
+new Chart(document.getElementById('subjChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Math','Language','Reading','Writing','Science','FastMath','Vocab','Soc. Sci'],
+    datasets: [{ data: [1276,756,667,247,208,84,31,31], backgroundColor: BAR_PURPLE, borderRadius: 4, borderWidth: 0 }]
+  },
+  options: { ...baseOpts(false),
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} calls (${(ctx.parsed.y/total*100).toFixed(1)}%)` } } }
+  }
+});
+
+// Level
+new Chart(document.getElementById('lvlChart'), {
+  type: 'bar',
+  data: {
+    labels: ['L1 (Lower Elem)','L2 (Upper Elem)','Middle School','Lower Level','High School'],
+    datasets: [{ data: [1286,961,507,380,114], backgroundColor: BAR_PURPLE, borderRadius: 4, borderWidth: 0 }]
+  },
+  options: { ...baseOpts(false),
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} calls (${(ctx.parsed.y/total*100).toFixed(1)}%)` } } }
+  }
+});
+
+// App
+new Chart(document.getElementById('appChart'), {
+  type: 'bar',
+  indexAxis: 'y',
+  data: {
+    labels: ['MobyMax','IXL','Zearn','Math Academy','AlphaWrite','AlphaRead','Freckle','Lalilo','ClearFluency','AlphaMath Flu.','Edia','Amplify'],
+    datasets: [{ data: [698,658,372,284,246,203,119,111,101,90,83,53], backgroundColor: BAR_PURPLE, borderRadius: 4, borderWidth: 0 }]
+  },
+  options: { ...baseOpts(true),
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} calls (${(ctx.parsed.x/total*100).toFixed(1)}%)` } } },
+    scales: {
+      x: { ticks: { color: textCol, font: { size: 10 } }, grid: { color: gridCol }, border: { display: false } },
+      y: { ticks: { color: textCol, font: { size: 10, family: 'DM Sans' } }, grid: { display: false }, border: { display: false } }
+    }
+  }
+});
+
+// Weekly
+const wkLabels = ['Sep 15','Sep 22','Sep 29','Oct 06','Oct 13','Oct 20','Oct 27','Nov 03','Nov 10','Nov 17','Nov 24','Dec 01','Dec 08','Dec 15','Dec 22','Dec 29','Jan 05','Jan 12','Jan 19','Jan 26','Feb 02','Feb 09','Feb 16','Feb 23','Mar 02','Mar 09','Mar 16','Mar 23','Mar 30','Apr 06','Apr 13'];
+const wkVals  = [126,163,123,53,121,124,156,183,188,162,33,158,156,149,5,8,138,193,181,102,160,198,174,68,142,185,222,186,216,256,166];
+const wkColors = wkVals.map((_,i) => i >= 24 ? BAR_TEAL : BAR_PURPLE);
+
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: wkLabels,
+    datasets: [
+      { data: wkVals, backgroundColor: wkColors, borderRadius: 3, borderWidth: 0 },
+      { type: 'line', data: Array(24).fill(132).concat(Array(7).fill(null)), borderColor: '#6B5EE4', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0 },
+      { type: 'line', data: Array(24).fill(null).concat(Array(7).fill(209)), borderColor: '#1A9E78', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { filter: (item) => item.datasetIndex === 0, callbacks: { label: ctx => ` ${ctx.parsed.y} calls` } }
+    },
+    scales: {
+      x: { ticks: { color: textCol, font: { size: 10 }, maxRotation: 45, autoSkip: false }, grid: { display: false }, border: { display: false } },
+      y: { ticks: { color: textCol, font: { size: 11 } }, grid: { color: gridCol }, border: { display: false }, min: 0 }
+    }
+  }
+});
+
+// Students data
+const students = [
+  { name:'Jake Signor',       before:2.93, since:2.13, chg:-27.3, flag:null },
+  { name:'Raphael Shinar',    before:3.01, since:1.52, chg:-49.5, flag:'positive' },
+  { name:'Betty Grunow',      before:2.12, since:3.50, chg:65.1,  flag:null },
+  { name:'Rivers Yong',       before:2.67, since:0.91, chg:-65.9, flag:'positive' },
+  { name:'Amelia Gabler',     before:1.44, since:2.13, chg:47.9,  flag:null },
+  { name:'Ethan Kim',         before:0.76, since:4.26, chg:460.5, flag:'attention' },
+  { name:'Brett Noel',        before:1.70, since:0.30, chg:-82.4, flag:'positive' },
+  { name:'Garrett Mullins',   before:0.17, since:5.63, chg:3212,  flag:'attention' },
+  { name:'Willa Rubenstein',  before:1.57, since:0.61, chg:-61.1, flag:null },
+  { name:'Luca Stroman',      before:1.36, since:1.22, chg:-10.3, flag:null },
+  { name:'Avra Tujios',       before:1.61, since:0.30, chg:-81.4, flag:'positive' },
+  { name:'Blake Price',       before:1.65, since:0.00, chg:-100,  flag:null },
+  { name:'Jackson Stuart',    before:1.32, since:1.07, chg:-18.9, flag:null },
+  { name:'Everly Wilcox',     before:1.61, since:0.00, chg:-100,  flag:null },
+  { name:'Hope Grunow',       before:1.61, since:0.00, chg:-100,  flag:null },
+  { name:'Tyesha Thomas',     before:1.40, since:0.61, chg:-56.4, flag:null },
+  { name:'Ezra Allred',       before:1.36, since:0.61, chg:-55.1, flag:null },
+  { name:'Sammy Strems',      before:1.15, since:1.37, chg:19.1,  flag:null },
+  { name:'Isaac David',       before:1.32, since:0.61, chg:-53.8, flag:null },
+  { name:'Johnny Grunow',     before:1.48, since:0.00, chg:-100,  flag:null },
+];
+
+function sinceColor(s) {
+  if (s.since === 0) return '#B4B2A9';
+  if (s.chg > 15)   return '#C27B1A';
+  if (s.chg < -15)  return '#1A9E78';
+  return '#888780';
+}
+
+// Rate chart
+new Chart(document.getElementById('rateChart'), {
+  type: 'bar',
+  indexAxis: 'y',
+  data: {
+    labels: students.map(s => s.name),
+    datasets: [
+      { label: 'Before Mar 1', data: students.map(s => s.before), backgroundColor: BAR_PURPLE, borderRadius: 2, borderWidth: 0 },
+      { label: 'Since Mar 1',  data: students.map(s => s.since),  backgroundColor: students.map(s => sinceColor(s)), borderRadius: 2, borderWidth: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)} calls/week` } }
+    },
+    scales: {
+      x: { ticks: { color: textCol, font: { size: 11 }, callback: v => v.toFixed(1) }, grid: { color: gridCol }, border: { display: false },
+        title: { display: true, text: 'calls per week', color: textCol, font: { size: 11 } } },
+      y: { ticks: { color: textCol, font: { size: 12, family: 'DM Sans' } }, grid: { display: false }, border: { display: false } }
+    }
+  }
+});
+
+// Table
+const tbody = document.getElementById('indepTable');
+const maxRate = 5.63;
+students.forEach((s, i) => {
+  const col = sinceColor(s);
+  let chgText;
+  if (s.since === 0) chgText = `<span class="chg-val" style="color:#A09D98;">— no calls</span>`;
+  else chgText = `<span class="chg-val" style="color:${col};">${s.chg > 0 ? '+' : ''}${s.chg.toFixed(1)}%</span>`;
+
+  let flagHtml = '';
+  if (s.flag === 'attention') flagHtml = `<span class="flag-pill flag-attention">▲ attention</span>`;
+  else if (s.flag === 'positive') flagHtml = `<span class="flag-pill flag-positive">▼ strong drop</span>`;
+
+  const barBefore = (s.before / maxRate * 100).toFixed(1);
+  const barSince  = (s.since  / maxRate * 100).toFixed(1);
+
+  tbody.innerHTML += `<tr>
+    <td style="color:var(--text-muted);font-size:11px;font-family:'DM Mono',monospace;">${i+1}</td>
+    <td><span class="student-name">${s.name}</span>${flagHtml}</td>
+    <td style="text-align:right;color:${BAR_PURPLE};font-family:'DM Mono',monospace;font-size:12px;">${s.before.toFixed(2)}</td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${col};font-weight:500;">${s.since.toFixed(2)}</td>
+    <td style="text-align:right;">${chgText}</td>
+    <td>
+      <div class="rate-bar-wrap">
+        <div class="rate-bar-bg"><div class="rate-bar-fill" style="background:${BAR_PURPLE};width:${barBefore}%;"></div></div>
+        <div class="rate-bar-bg"><div class="rate-bar-fill" style="background:${col};width:${barSince}%;"></div></div>
+      </div>
+    </td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
