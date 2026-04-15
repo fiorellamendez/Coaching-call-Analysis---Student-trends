@@ -452,43 +452,7 @@ function sinceColor(s) {
   return '#888780';
 }
 
-// Rate visual — DOM based
-const rateViz = document.getElementById('rateViz');
 const maxRate = Math.max(...students.map(s => Math.max(s.before, s.since)));
-
-rateViz.innerHTML = `
-  <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:0;font-size:12px;">
-    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px 8px 0;">Student</div>
-    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;">Before Mar 1 (calls/week)</div>
-    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;">Since Mar 1 (calls/week)</div>
-    ${students.map((s, i) => {
-      const col = sinceColor(s);
-      const beforePct = (s.before / maxRate * 100).toFixed(1);
-      const sincePct  = (s.since  / maxRate * 100).toFixed(1);
-      const bg = i % 2 === 0 ? 'transparent' : 'var(--surface2)';
-      let flagHtml = '';
-      if (s.flag === 'attention') flagHtml = `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:#FDF0DC;color:#8A5500;margin-left:6px;">▲</span>`;
-      else if (s.flag === 'positive') flagHtml = `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:#E0F5ED;color:#0E6B50;margin-left:6px;">▼</span>`;
-      return `
-        <div style="padding:10px 12px 10px 0;background:${bg};display:flex;align-items:center;font-weight:500;border-top:1px solid var(--border);">${s.name}${flagHtml}</div>
-        <div style="padding:10px 12px;background:${bg};border-top:1px solid var(--border);">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
-              <div style="width:${beforePct}%;height:8px;border-radius:3px;background:#6B5EE4;"></div>
-            </div>
-            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:#6B5EE4;min-width:36px;text-align:right;">${s.before.toFixed(2)}</span>
-          </div>
-        </div>
-        <div style="padding:10px 12px;background:${bg};border-top:1px solid var(--border);">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;background:var(--gray-light);border-radius:3px;height:8px;">
-              <div style="width:${sincePct}%;height:8px;border-radius:3px;background:${col};"></div>
-            </div>
-            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${col};min-width:36px;text-align:right;">${s.since.toFixed(2)}</span>
-          </div>
-        </div>`;
-    }).join('')}
-  </div>`;
 
 // Table
 const tbody = document.getElementById('indepTable');
